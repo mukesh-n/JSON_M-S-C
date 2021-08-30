@@ -2,41 +2,41 @@
 import _ from "lodash";
 import { Pool, PoolClient } from "pg";
 import { using } from "../../../../global/utils";
-import { Users, UsersWrapper } from "../models/users.model";
+import { product, productWrapper } from "../models/product.model";
 import { BaseService } from "./base.service";
 
-   export class UsersService extends BaseService {
+   export class productService extends BaseService {
   
   
       sql_select : string = `
-      SELECT u.id, u.name, u.date_of_birth, u.address, u.phone_number, u.version, u.created_on, u.modified_on, u.is_active
-      FROM Users u
+      SELECT .id, .name, .date_of_manufacturing, .address, .contact_number, .version, .created_on, .modified_on, .is_active
+      FROM product 
       @condition;
       `;
     
   
 sql_insert: string = `
-INSERT INTO Users(id, name, date_of_birth, address, phone_number, version, created_on, modified_on, is_active)
+INSERT INTO product(id, name, date_of_manufacturing, address, contact_number, version, created_on, modified_on, is_active)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;  
 `;
 
   sql_update: string = `
-    UPDATE Users
-    SET   name = $2, date_of_birth = $3, address = $4, phone_number = $5, version = $6, created_on = $7, modified_on = $8, is_active = $9
+    UPDATE product
+    SET   name = $2, date_of_manufacturing = $3, address = $4, contact_number = $5, version = $6, created_on = $7, modified_on = $8, is_active = $9
     WHERE id = $1
     RETURNING *;
   `;
   
     sql_delete: string =
-` DELETE FROM public.Users
+` DELETE FROM public.product
    WHERE id = $1
    RETURNING *; `
 
     public async select(
-  _req: Users
-): Promise<Array<Users>> {
-  var result: Array<Users> = [];
+  _req: product
+): Promise<Array<product>> {
+  var result: Array<product> = [];
   try {
     await using(this.db.getDisposablePool(), async (pool) => {
       var client = await pool.connect();
@@ -52,9 +52,9 @@ RETURNING *;
   
   public async selectTransaction(
       _client: PoolClient,
-      _req: Users
-    ): Promise<Array<Users>> {
-      var result: Array<Users> = [];
+      _req: product
+    ): Promise<Array<product>> {
+      var result: Array<product> = [];
       try {
         var query: string = this.sql_select;
         var condition_list: Array<string> = [];
@@ -72,12 +72,12 @@ RETURNING *;
         var { rows } = await _client.query(query);
         if (rows.length > 0) {
           _.forEach(rows, (v) => {
-            var temp: Users = new Users();
+            var temp: product = new product();
            temp.id = v.id != null ? parseInt(v.id) : 0;
 temp.name = v.name;
-temp.date_of_birth = v.date_of_birth;
+temp.date_of_manufacturing = v.date_of_manufacturing;
 temp.address = v.address;
-temp.phone_number = v.phone_number != null ? parseInt(v.phone_number) : null;
+temp.contact_number = v.contact_number != null ? parseInt(v.contact_number) : null;
 temp.version = v.version != null ? parseInt(v.version) : null;
 temp.created_on = v.created_on;
 temp.modified_on = v.modified_on;
@@ -91,7 +91,7 @@ temp.is_active = v.is_active;
       return result;
     }
   
-    public async insert(_req: Users): Promise<Users> {
+    public async insert(_req: product): Promise<product> {
   try {
     await using(this.db.getDisposablePool(), async (pool) => {
       var client = await pool.connect();
@@ -107,7 +107,7 @@ temp.is_active = v.is_active;
   
 public async insertTransaction(
     _client: PoolClient,
-    _req: Users
+    _req: product
   ): Promise<void> {
     try {
       _req.created_on = new Date();
@@ -117,9 +117,9 @@ public async insertTransaction(
       var { rows } = await _client.query(this.sql_insert, [
         _req.id,
 _req.name,
-_req.date_of_birth,
+_req.date_of_manufacturing,
 _req.address,
-_req.phone_number,
+_req.contact_number,
 _req.version,
 _req.created_on,
 _req.modified_on,
@@ -134,7 +134,7 @@ _req.is_active
       throw error;
     }
   }
-    public async update(_req: Users): Promise<Users> {
+    public async update(_req: product): Promise<product> {
   try {
     await using(this.db.getDisposablePool(), async (pool) => {
       var client = await pool.connect();
@@ -149,7 +149,7 @@ _req.is_active
 }
   public async updateTransaction(
     _client: PoolClient,
-    _req: Users
+    _req: product
   ): Promise<void> {
     try {
       _req.modified_on = new Date();
@@ -157,9 +157,9 @@ _req.is_active
       var { rows } = await _client.query(this.sql_update, [
       _req.id,
 _req.name,
-_req.date_of_birth,
+_req.date_of_manufacturing,
 _req.address,
-_req.phone_number,
+_req.contact_number,
 _req.version,
 _req.created_on,
 _req.modified_on,
@@ -174,7 +174,7 @@ _req.is_active
       throw error;
     }
   }
-  public async delete(_req: Users): Promise<Users> {
+  public async delete(_req: product): Promise<product> {
   try {
     await using(this.db.getDisposablePool(), async (pool) => {
       var client = await pool.connect();
@@ -189,7 +189,7 @@ _req.is_active
 }
   public async deleteTransaction(
     _client: PoolClient,
-    _req: Users
+    _req: product
   ): Promise<void> {
     try {
       _req.modified_on = new Date();
@@ -197,9 +197,9 @@ _req.is_active
       var { rows } = await _client.query(this.sql_update, [
       _req.id,
 _req.name,
-_req.date_of_birth,
+_req.date_of_manufacturing,
 _req.address,
-_req.phone_number,
+_req.contact_number,
 _req.version,
 _req.created_on,
 _req.modified_on,

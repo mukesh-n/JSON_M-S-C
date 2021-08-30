@@ -1,44 +1,44 @@
 import express from "express";
-import _, { indexOf, join, replace } from "lodash";
+import _, { indexOf, join, replace, template } from "lodash";
 let input = {
   name: "Users",
   columns: [
     {
-      name: "id",
-      type: "number",
-    },
-    {
-      name: "name",
-      type: "string",
-    },
-    {
-      name: "date_of_birth",
-      type: "date",
-    },
-    {
-      name: "address",
-      type: "string",
-    },
-    {
-      name: "phone_number",
-      type: "number",
-    },
-    {
-      name: "version",
-      type: "number",
-    },
-    {
-      name: "created_on",
-      type: "date",
-    },
-    {
-      name: "modified_on",
-      type: "date",
-    },
-    {
-      name: "is_active",
-      type: "boolean",
-    }
+        name: "id",
+        type: "number",
+      },
+      {
+        name: "name",
+        type: "string",
+      },
+      {
+        name: "date_of_birth",
+        type: "date",
+      },
+      {
+        name: "address",
+        type: "string",
+      },
+      {
+        name: "phone_number",
+        type: "number",
+      },
+      {
+        name: "version",
+        type: "number",
+      },
+      {
+        name: "created_on",
+        type: "date",
+      },
+      {
+        name: "modified_on",
+        type: "date",
+      },
+      {
+        name: "is_active",
+        type: "boolean",
+      }
   ],
 };
 
@@ -68,7 +68,6 @@ _.forEach(input.columns, (v) => {
 });
 
 // version_name: string | null = null;
-// req_id: number | null = null;
 
 let model_template: string = `
   export class ${input.name} extends Base{
@@ -93,6 +92,25 @@ model = _.replace(model, /@propertylist/g, modelpropertylist);
 // ***************************************************************************************************************
 /* service */
 /* select query */
+let table_name_path =input.name.toLowerCase()
+
+
+let file_path_service_template: string = `
+import _ from "lodash";
+import { Pool, PoolClient } from "pg";
+import { using } from "../../../../global/utils";
+import { @tablename, @tablenameWrapper } from "../models/@tablepath.model";
+import { BaseService } from "./base.service";`
+
+let table_name = input.name;
+
+let file_path_service_entity_template = _.replace(file_path_service_template,
+  /@tablename/g,
+  table_name);
+
+  let table_name_path_temp = _.replace(file_path_service_entity_template,
+    /@tablepath/g,
+    table_name_path)
 let sql_select_query_template = `
       sql_select : string = \`
       SELECT @columnlist
@@ -514,12 +532,28 @@ class ${input.name}Service extends BaseService {
 /* controller */
 // controller get
 const router = express.Router();
+let controllertablename: string = input.name;
+let table_name_path_c = input.name.toLowerCase()
 
+let file_path_controller_template = `import express from "express";
+import { ActionRes } from "../../../../global/model/actionres.model";
+import { @tablename, @tablenameWrapper } from "../models/@tablepath.model";
+import { @tablenameService } from "../service/@tablepath.service";
+const router = express.Router();`
+
+let entity_file_path_controller_template = _.replace(file_path_controller_template,
+  /@tablename/g,
+  controllertablename
+  );
+
+ let table_name_path_controller = _.replace(entity_file_path_controller_template,
+    /@tablepath/g,
+    table_name_path_c )
 /* entity controller */
 let entity_controller_template: string = `router.get("/entity", async (req, res, next) => {
         try {
           var result: ActionRes<@tablename> = new ActionRes<@tablename>({
-            item: new @tablename({}),
+            item: new @tablename(),
           });
           next(result);
         } catch (error) {
@@ -527,7 +561,7 @@ let entity_controller_template: string = `router.get("/entity", async (req, res,
         }
       });`;
 
-let controllertablename: string = input.name;
+
 
 let entityControllerTemplate = _.replace(
   entity_controller_template,
@@ -633,8 +667,8 @@ ${deleteControllerTemplate}
 import * as fs from 'fs';
 import * as path from 'path';
 
-fs.writeFile(path.join(__dirname, `./src/app/modules/project/controller/${input.name.toLowerCase()}.controller.ts`), `
-const router = express.Router();
+fs.writeFile(path.join(__dirname, `./src/app/modules/project/controller/${input.name.toLowerCase()}.controller.ts`), 
+`${table_name_path_controller}
 ${entityControllerTemplate}
 ${getControllerTemplate}
 ${insertControllerTemplate}
@@ -647,8 +681,10 @@ ${deleteControllerTemplate}
 
 fs.writeFile(
   path.join(__dirname, `./src/app/modules/project/service/${input.name.toLowerCase()}.service.ts`),
-  `
-export class ${input.name}Service extends BaseService {
+  `${table_name_path_temp}
+
+   export class ${input.name}Service extends BaseService {
+  
   ${sql_select_query}
   ${sql_insert_query}
   ${sql_update_query}
@@ -670,7 +706,7 @@ export class ${input.name}Service extends BaseService {
 
 fs.writeFile(
   path.join(__dirname, `./src/app/modules/project/models/${input.name.toLowerCase()}.model.ts`),
-  `
+  `import { Base } from "./base.model"
 export class ${input.name} extends Base{
   ${properties.join("\n")}
 }
@@ -694,3 +730,40 @@ export class ${input.name}Wrapper extends ${input.name}{
 // import { Users, UsersWrapper } from "../models/users.model";
 // import { UsersService } from "../service/users.service";
 // const router = express.Router();
+
+// {
+//   name: "id",
+//   type: "number",
+// },
+// {
+//   name: "name",
+//   type: "string",
+// },
+// {
+//   name: "date_of_birth",
+//   type: "date",
+// },
+// {
+//   name: "address",
+//   type: "string",
+// },
+// {
+//   name: "phone_number",
+//   type: "number",
+// },
+// {
+//   name: "version",
+//   type: "number",
+// },
+// {
+//   name: "created_on",
+//   type: "date",
+// },
+// {
+//   name: "modified_on",
+//   type: "date",
+// },
+// {
+//   name: "is_active",
+//   type: "boolean",
+// }
